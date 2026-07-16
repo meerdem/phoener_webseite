@@ -213,6 +213,28 @@ function initQuoteBands() {
   lucide.createIcons();
 }
 
+// Urhebernennung des Videos aus den Einstellungen laden
+fetch('content/einstellungen.json', { cache: 'no-store' })
+  .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function (s) {
+    var el = document.getElementById('videoCredit');
+    if (!el || !s || !s.videoCredit) return;
+    var c = s.videoCredit;
+    if (!c.text || !c.text.trim()) { el.remove(); return; }
+    el.textContent = 'Video: ';
+    if (c.url && c.url.trim()) {
+      var a = document.createElement('a');
+      a.href = c.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = c.text;
+      el.appendChild(a);
+    } else {
+      el.appendChild(document.createTextNode(c.text));
+    }
+  })
+  .catch(function () { /* statische Nennung aus dem HTML bleibt stehen */ });
+
 // Zitate aus dem Content-Ordner laden, bei Fehlern eingebaute Zitate verwenden
 fetch('content/zitate.json', { cache: 'no-store' })
   .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
