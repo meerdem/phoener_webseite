@@ -213,12 +213,22 @@ function initQuoteBands() {
   lucide.createIcons();
 }
 
-// Urhebernennung des Videos aus den Einstellungen laden
+// Einstellungen laden: Hero-Modus (Video oder Bild) und Urhebernennung
 fetch('content/einstellungen.json', { cache: 'no-store' })
   .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(function (s) {
     var el = document.getElementById('videoCredit');
-    if (!el || !s || !s.videoCredit) return;
+    if (!s) return;
+
+    // Modus "bild": Video entfernen, das Hintergrundbild bleibt sichtbar
+    if (s.heroModus === 'bild') {
+      var v = document.querySelector('.hero-bg video');
+      if (v) { v.pause(); v.remove(); }
+      if (el) { el.remove(); }
+      return;
+    }
+
+    if (!el || !s.videoCredit) return;
     var c = s.videoCredit;
     if (!c.text || !c.text.trim()) { el.remove(); return; }
     el.textContent = 'Video: ';
