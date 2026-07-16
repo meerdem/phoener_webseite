@@ -76,13 +76,16 @@ if (toggle && nav) {
 // Zitat-Karussell
 // ------------------------------------------------------------
 
-var QUOTES = [
+// Fallback, falls content/zitate.json nicht geladen werden kann
+var QUOTES_FALLBACK = [
   { text: '„Der Weg entsteht, indem man ihn geht."', by: 'Antonio Machado' },
   { text: '„Auch der weiteste Weg beginnt mit einem ersten Schritt."', by: 'Laozi' },
   { text: '„Wer immer tut, was er schon kann, bleibt immer das, was er schon ist."', by: 'Henry Ford' },
   { text: '„Wir können den Wind nicht ändern, aber die Segel anders setzen."', by: 'Aristoteles zugeschrieben' },
   { text: '„In dir muss brennen, was du in anderen entzünden willst."', by: 'Augustinus von Hippo' }
 ];
+
+var QUOTES = QUOTES_FALLBACK;
 
 var INTERVAL_MS = 7000;
 var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -204,7 +207,21 @@ function buildCarousel(band) {
   if (playing) startTimer();
 }
 
-document.querySelectorAll('.quote-band[data-quotes]').forEach(buildCarousel);
+function initQuoteBands() {
+  document.querySelectorAll('.quote-band[data-quotes]').forEach(buildCarousel);
+  // Icons rendern (nach dem Karussell-Aufbau, damit alle data-lucide erfasst sind)
+  lucide.createIcons();
+}
 
-// Icons rendern (nach dem Karussell-Aufbau, damit alle data-lucide erfasst sind)
-lucide.createIcons();
+// Zitate aus dem Content-Ordner laden, bei Fehlern eingebaute Zitate verwenden
+fetch('content/zitate.json', { cache: 'no-store' })
+  .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function (data) {
+    if (data && Array.isArray(data.zitate) && data.zitate.length) {
+      QUOTES = data.zitate.map(function (z) {
+        return { text: z.text, by: z.autor };
+      });
+    }
+  })
+  .catch(function () { /* Fallback bleibt aktiv */ })
+  .then(initQuoteBands);
